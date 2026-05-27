@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MORPHOS: Autoregressive 4D Generation with Temporal Structured Latents</title>
+<meta name="description" content="MORPHOS: an autoregressive 4D generative framework that produces dynamic 3D assets (meshes, 3D Gaussians, radiance fields) from video via Temporal Structured Latents.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#7C3AED;
+  --accent-soft:#EDE7FB;
+  --accent-cyan:#22B8CF;
+  --bg:#FAFAFA;
+  --surface:#FFFFFF;
+  --text:#1B1B23;
+  --text-secondary:#6B6B78;
+  --border:#E6E4EC;
+  --max-width:1020px;
+  --sidebar-w:230px;
+  --radius:14px;
+  --shadow:0 6px 24px rgba(40,30,70,0.08);
+  --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none;}
+.hl{color:var(--accent);font-weight:600;}
+.mono{font-family:var(--font-mono);}
+
+/* ---------- Layout ---------- */
+.layout{display:flex;align-items:flex-start;justify-content:center;gap:0;}
+.sidebar{
+  position:sticky;top:0;height:100vh;width:var(--sidebar-w);
+  flex:0 0 var(--sidebar-w);
+  padding:48px 18px 48px 28px;
+  display:flex;flex-direction:column;
+  border-right:1px solid var(--border);
+}
+.sidebar .brand{font-weight:800;font-size:1.15rem;letter-spacing:.06em;margin-bottom:6px;}
+.sidebar .brand span{background:linear-gradient(90deg,#9F7AEA,#7C3AED 45%,#22B8CF);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.sidebar .brand-sub{font-size:.72rem;color:var(--text-secondary);margin-bottom:26px;line-height:1.4;}
+.nav-list{display:flex;flex-direction:column;gap:2px;}
+.nav-list a{
+  color:var(--text-secondary);font-size:.84rem;font-weight:500;
+  padding:7px 10px;border-radius:8px;transition:.18s;border-left:2px solid transparent;
+}
+.nav-list a:hover{color:var(--accent);background:var(--accent-soft);}
+.nav-list a.active{color:var(--accent);font-weight:700;background:var(--accent-soft);border-left-color:var(--accent);}
+
+.main{flex:1 1 auto;max-width:var(--max-width);width:100%;padding:0 40px 120px;}
+
+/* ---------- Hero ---------- */
+.hero{padding:64px 0 18px;text-align:center;}
+.venue{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);background:var(--accent-soft);padding:6px 14px;border-radius:999px;margin-bottom:22px;}
+.hero h1{font-size:2.9rem;font-weight:800;line-height:1.12;margin:0 0 6px;letter-spacing:-.01em;}
+.hero h1 .name{background:linear-gradient(90deg,#A78BFA,#7C3AED 50%,#22B8CF);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero .subtitle{font-size:1.32rem;font-weight:600;color:var(--text);max-width:760px;margin:8px auto 0;line-height:1.35;}
+
+/* ---------- Authors ---------- */
+.authors{text-align:center;padding:26px 0 6px;}
+.authors .row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;font-size:1.04rem;font-weight:500;}
+.authors .row a{color:var(--text);}
+.authors .row sup{color:var(--accent);font-weight:700;}
+.authors .affil{margin-top:14px;font-size:.98rem;color:var(--text-secondary);}
+.authors .note{margin-top:6px;font-size:.82rem;color:var(--text-secondary);}
+
+/* ---------- Links ---------- */
+.links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;padding:26px 0 10px;}
+.btn{
+  display:inline-flex;align-items:center;gap:9px;
+  background:#1B1B23;color:#fff;font-weight:600;font-size:.95rem;
+  padding:11px 20px;border-radius:999px;transition:.18s;border:1px solid #1B1B23;
+}
+.btn:hover{background:var(--accent);border-color:var(--accent);transform:translateY(-1px);}
+.btn svg{width:18px;height:18px;}
+
+/* ---------- Sections ---------- */
+section.block{scroll-margin-top:24px;padding:46px 0 0;}
+.label-tag{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+h2.heading{font-size:1.85rem;font-weight:800;margin:0 0 6px;letter-spacing:-.01em;}
+h2.heading::after{content:"";display:block;width:42px;height:3px;background:var(--accent);border-radius:3px;margin-top:10px;}
+h3.subheading{font-size:1.18rem;font-weight:700;margin:30px 0 8px;}
+p{margin:0 0 14px;}
+.muted{color:var(--text-secondary);}
+
+/* ---------- Teaser / figures ---------- */
+figure{margin:18px 0 0;}
+figure img{width:100%;height:auto;display:block;border-radius:var(--radius);background:#fff;}
+.teaser img{box-shadow:var(--shadow);}
+figcaption{font-size:.88rem;color:var(--text-secondary);margin-top:12px;line-height:1.5;text-align:center;}
+figcaption strong{color:var(--text);}
+.fig-bordered img{border:1px solid var(--border);padding:10px;}
+
+/* ---------- TL;DR ---------- */
+.tldr{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);
+  border-radius:var(--radius);padding:22px 26px;box-shadow:var(--shadow);}
+.tldr strong.lbl{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.tldr p{margin:0;font-size:1.04rem;}
+
+/* ---------- Callout ---------- */
+.callout{display:flex;gap:14px;background:var(--accent-soft);border:1px solid #DDD2F5;
+  border-radius:var(--radius);padding:18px 22px;margin-top:20px;}
+.callout .icon{font-size:1.3rem;line-height:1.4;}
+.callout p{margin:0;font-size:1rem;}
+
+/* ---------- Bullet list ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:20px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
+.card .num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;
+  background:var(--accent);color:#fff;font-weight:700;margin-bottom:10px;}
+.card h4{margin:0 0 6px;font-size:1.02rem;font-weight:700;}
+.card p{margin:0;font-size:.92rem;color:var(--text-secondary);}
+
+/* ---------- Tables ---------- */
+.switcher{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 14px;}
+.switcher button{
+  border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);
+  font-family:var(--font);font-size:.86rem;font-weight:600;padding:8px 15px;border-radius:999px;cursor:pointer;transition:.16s;
+}
+.switcher button:hover{border-color:var(--accent);color:var(--accent);}
+.switcher button.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.table-page{display:none;}
+.table-page.active{display:block;}
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);}
+table{border-collapse:collapse;width:100%;font-size:.9rem;background:var(--surface);}
+thead th{background:var(--accent-soft);color:var(--text);font-weight:700;padding:10px 12px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--border);}
+thead th:first-child{text-align:left;}
+tbody td{padding:9px 12px;text-align:center;border-bottom:1px solid #F0EEF5;white-space:nowrap;}
+tbody td:first-child{text-align:left;font-weight:500;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr.ours{background:var(--accent-soft);}
+tbody tr.ours td{font-weight:700;}
+tbody tr.group td{background:#F6F4FB;font-weight:700;color:var(--text-secondary);text-transform:uppercase;font-size:.74rem;letter-spacing:.1em;}
+.best{font-weight:800;}
+.second{text-decoration:underline;}
+.tbl-note{font-size:.82rem;color:var(--text-secondary);margin-top:10px;}
+.tbl-cap{font-size:.9rem;color:var(--text-secondary);margin:0 0 4px;}
+
+/* ---------- Capability table (checks) ---------- */
+.cap-table td .yes{color:#16A34A;font-weight:700;}
+.cap-table td .no{color:#CBD0D8;font-weight:700;}
+
+/* ---------- Two-column figure rows ---------- */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;margin-top:20px;}
+.two-col.narrow-right{grid-template-columns:1.4fr 1fr;}
+@media(max-width:760px){.two-col,.two-col.narrow-right{grid-template-columns:1fr;}}
+
+/* ---------- BibTeX ---------- */
+.bibtex{position:relative;background:#1B1B23;border-radius:var(--radius);padding:20px 22px;margin-top:18px;overflow:auto;}
+.bibtex pre{margin:0;color:#E6E1F2;font-family:var(--font-mono);font-size:.84rem;line-height:1.6;white-space:pre;}
+.copy-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.12);border:none;color:#fff;
+  border-radius:8px;padding:7px 9px;cursor:pointer;display:inline-flex;}
+.copy-btn:hover{background:var(--accent);}
+
+/* ---------- Mobile ---------- */
+.menu-toggle{display:none;}
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .main{padding:0 22px 90px;max-width:720px;}
+  .hero h1{font-size:2.1rem;}
+  .hero .subtitle{font-size:1.08rem;}
+  h2.heading{font-size:1.5rem;}
+}
+footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:.82rem;}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ===================== SIDEBAR NAV ===================== -->
+  <aside class="sidebar">
+    <div class="brand"><span>MORPHOS</span></div>
+    <div class="brand-sub">Autoregressive 4D Generation with Temporal Structured Latents</div>
+    <nav class="nav-list" id="nav">
+      <a href="#overview">Overview</a>
+      <a href="#motivation">Motivation</a>
+      <a href="#tslat">Temporal Structured Latents</a>
+      <a href="#autoregressive">Autoregressive Generation</a>
+      <a href="#augmentation">Temporal-Structural Aug.</a>
+      <a href="#results">Quantitative Results</a>
+      <a href="#analysis">Analysis</a>
+      <a href="#qualitative">Qualitative Results</a>
+      <a href="#citation">Citation</a>
+    </nav>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+
+    <!-- HERO -->
+    <header class="hero">
+      <span class="venue">Preprint 2026</span>
+      <h1><span class="name">MORPHOS</span></h1>
+      <p class="subtitle">Autoregressive 4D Generation with Temporal Structured Latents</p>
+    </header>
+
+    <!-- AUTHORS -->
+    <section class="authors">
+      <div class="row">
+        <span>Minkyung Kwon<sup>*</sup></span>
+        <span>Jinhyeok Choi<sup>*</sup></span>
+        <span>Youngjin Shin</span>
+        <span>Jaeyeong Kim</span>
+        <span>JongMin Lee</span>
+        <span>Seungryong Kim<sup>&dagger;</sup></span>
+      </div>
+      <div class="affil">KAIST AI</div>
+      <div class="note"><sup>*</sup> Equal contribution&nbsp;&nbsp;·&nbsp;&nbsp;<sup>&dagger;</sup> Corresponding author</div>
+    </section>
+
+    <!-- LINKS -->
+    <section class="links">
+      <a class="btn" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span>Paper</span>
+      </a>
+      <a class="btn" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-6 0v4"></path><rect x="2" y="9" width="20" height="11" rx="2"></rect></svg>
+        <span>arXiv</span>
+      </a>
+      <a class="btn" href="https://github.com/cvlab-kaist/MORPHOS" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        <span>Code</span>
+      </a>
+    </section>
+
+    <!-- TEASER -->
+    <section class="block teaser" style="padding-top:30px;">
+      <figure>
+        <img src="assets/teaser.png" alt="MORPHOS teaser: given video inputs, MORPHOS autoregressively generates unified dynamic 3D representations — meshes, 3D Gaussians, and radiance fields.">
+        <figcaption><strong>MORPHOS</strong> takes a video as input and autoregressively generates unified dynamic 3D assets — <strong>meshes, 3D Gaussians, and radiance fields</strong> — while handling complex motion and evolving topologies.</figcaption>
+      </figure>
+    </section>
+
+    <!-- TL;DR -->
+    <section class="block" id="overview">
+      <div class="tldr">
+        <strong class="lbl">TL;DR</strong>
+        <p>We present <span class="hl">MORPHOS</span>, an autoregressive 4D generative framework that produces dynamic 3D assets from video across <span class="hl">diverse representations — meshes, 3D Gaussians, and radiance fields</span>. We introduce <span class="hl">Temporal Structured Latents (T-SLAT)</span>, a unified 4D representation that jointly encodes geometry and appearance over time. With causal attention, MORPHOS conditions each frame on its preceding history, and a <span class="hl">temporal-structural augmentation</span> strategy mitigates error accumulation for robust long-horizon generation.</p>
+      </div>
+    </section>
+
+    <!-- MOTIVATION -->
+    <section class="block" id="motivation">
+      <span class="label-tag">Motivation</span>
+      <h2 class="heading">Why is video-to-4D generation hard?</h2>
+      <p class="muted">Existing 4D generation methods perform well in narrow settings, but face three recurring limitations:</p>
+      <div class="cards">
+        <div class="card">
+          <span class="num">1</span>
+          <h4>Representation fragmentation</h4>
+          <p>Most frameworks specialize in a <strong>single</strong> 3D format — meshes <em>or</em> Gaussians — restricting generalization across modalities.</p>
+        </div>
+        <div class="card">
+          <span class="num">2</span>
+          <h4>Fixed-topology constraints</h4>
+          <p>Deformation-based modeling keeps temporal consistency for rigid motion but <strong>cannot handle topological changes</strong> or large structural shifts.</p>
+        </div>
+        <div class="card">
+          <span class="num">3</span>
+          <h4>Error accumulation</h4>
+          <p>Long-horizon generation drifts as self-generated history degrades, breaking <strong>temporal consistency</strong> over long videos.</p>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="icon">💡</span>
+        <p><strong>MORPHOS</strong> addresses all three: a <span class="hl">unified 4D latent (T-SLAT)</span> decodable to meshes / Gaussians / radiance fields, <span class="hl">autoregressive causal generation</span> that accommodates evolving topologies, and <span class="hl">temporal-structural augmentation</span> for stable long-horizon rollouts.</p>
+      </div>
+
+      <h3 class="subheading">A single model across representations and long horizons</h3>
+      <div class="table-wrap" style="margin-top:8px;">
+        <table class="cap-table">
+          <thead>
+            <tr><th>Method</th><th>Mesh</th><th>3D Gaussian</th><th>Radiance Field</th><th>Long-horizon</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Motion324</td><td><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="yes">✓</span></td></tr>
+            <tr><td>ActionMesh</td><td><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
+            <tr><td>Mesh4D</td><td><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
+            <tr><td>L4GM</td><td><span class="no">✗</span></td><td><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="yes">✓</span></td></tr>
+            <tr><td>GVFD</td><td><span class="no">✗</span></td><td><span class="yes">✓</span></td><td><span class="no">✗</span></td><td><span class="no">✗</span></td></tr>
+            <tr class="ours"><td>MORPHOS (Ours)</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- T-SLAT -->
+    <section class="block" id="tslat">
+      <span class="label-tag">Method</span>
+      <h2 class="heading">Temporal Structured Latents (T-SLAT)</h2>
+      <p>We extend <span class="hl">Structured Latents (SLAT)</span> into the temporal domain to obtain a <span class="hl">unified 4D representation</span> that jointly encodes geometry and appearance along time. An animated mesh sequence is normalized into a shared canonical space via a global union axis-aligned bounding box, then encoded by a sparse VAE into T-SLAT. A single T-SLAT can be decoded into <span class="hl">meshes, 3D Gaussians, and radiance fields</span>.</p>
+      <figure class="fig-bordered">
+        <img src="assets/tslat_generation.png" alt="T-SLAT generation pipeline: input video and noise pass through a flow transformer with causal and cross attention to produce T-SLAT, decoded into Gaussian, mesh, and radiance-field outputs.">
+        <figcaption><strong>T-SLAT generation.</strong> A flow transformer Φ<sub>L</sub> with causal attention generates T-SLAT from the input video, which is decoded into multiple dynamic 3D representations through dedicated decoders.</figcaption>
+      </figure>
+    </section>
+
+    <!-- AUTOREGRESSIVE -->
+    <section class="block" id="autoregressive">
+      <span class="label-tag">Method</span>
+      <h2 class="heading">Autoregressive 4D Generation</h2>
+      <p>MORPHOS factorizes 4D generation as a Markovian process: each latent <span class="mono">z<sup>t</sup></span> is conditioned on the preceding history <span class="mono">z<sup>&lt;t</sup></span> and the current video frame. Two rectified-flow transformers generate the <span class="hl">sparse structure</span> (voxels) and then the <span class="hl">T-SLAT</span> conditioned on it. A <span class="hl">causal attention</span> architecture with a sliding window restricts each query to its history, enabling arbitrarily long generation and <span class="hl">KV caching</span> for efficient inference.</p>
+      <div class="two-col narrow-right">
+        <figure class="fig-bordered" style="margin-top:0;">
+          <img src="assets/autoregressive.png" alt="Autoregressive streaming: a flow transformer generates each frame's structured latent conditioned on previously generated frames.">
+          <figcaption><strong>Autoregressive streaming.</strong> Each frame is generated conditioned on its preceding history, supporting long-horizon video inputs.</figcaption>
+        </figure>
+        <figure class="fig-bordered" style="margin-top:0;">
+          <img src="assets/causal_attention.png" alt="Causal attention mask over the temporal dimension: queries attend only to current and previous frames within a sliding window.">
+          <figcaption><strong>Causal attention.</strong> Queries at frame <em>t</em> attend only to current and past frames within the window, enabling KV caching.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- AUGMENTATION -->
+    <section class="block" id="augmentation">
+      <span class="label-tag">Method</span>
+      <h2 class="heading">Training with Temporal-Structural Augmentation</h2>
+      <p>Autoregressive models are trained on ground-truth history but must generalize to imperfect, self-generated history at inference. To bridge this gap, MORPHOS trains both flow transformers with a <span class="hl">temporal-structural augmentation</span> strategy.</p>
+      <div class="cards">
+        <div class="card">
+          <span class="num">T</span>
+          <h4>Temporal augmentation</h4>
+          <p>Assigns an <strong>independent noise level per frame</strong> during training, exposing the model to histories of varying quality so it stays robust to cumulative errors in autoregressive rollouts.</p>
+        </div>
+        <div class="card">
+          <span class="num">S</span>
+          <h4>Structural augmentation</h4>
+          <p><strong>Randomly drops voxels</strong> in the sparse structure conditioning T-SLAT generation, making the model robust to structural inaccuracies propagated from the structure-generation stage.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="block" id="results">
+      <span class="label-tag">Evaluation</span>
+      <h2 class="heading">Quantitative Results</h2>
+      <p class="muted">Evaluated against state-of-the-art video-to-4D baselines and the image-to-3D model TRELLIS. <span class="best">Bold</span> = best, <span class="second">underline</span> = second best per column.</p>
+
+      <div class="switcher" id="tableSwitcher">
+        <button class="active" data-target="t-motion80">Motion80</button>
+        <button data-target="t-actionbench">ActionBench</button>
+        <button data-target="t-consist4d">Consist4D</button>
+        <button data-target="t-ablation">Ablation</button>
+        <button data-target="t-inference">Inference Time</button>
+      </div>
+
+      <!-- Motion80 -->
+      <div class="table-page active" id="t-motion80">
+        <p class="tbl-cap">Quantitative evaluation on Motion80, split into short and long sequences (long &gt; 128 frames).</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Method</th><th>LPIPS↓</th><th>CLIP↑</th><th>DreamSim↓</th><th>FVD↓</th><th>CD↓</th><th>F-score↑</th><th>P2S↓</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="8">Short</td></tr>
+              <tr><td>Motion324</td><td>0.2118</td><td>0.8051</td><td>0.2347</td><td>336.63</td><td class="best">0.0615</td><td class="best">0.3259</td><td class="best">0.0308</td></tr>
+              <tr><td>ActionMesh</td><td>–</td><td>–</td><td>–</td><td>–</td><td>0.1062</td><td class="second">0.2597</td><td>0.0528</td></tr>
+              <tr><td>Mesh4D</td><td>0.2023</td><td>0.7186</td><td>0.3465</td><td>592.56</td><td>0.1791</td><td>0.0712</td><td>0.0813</td></tr>
+              <tr><td>TRELLIS</td><td>0.2031</td><td>0.8643</td><td>0.1861</td><td>796.51</td><td>0.2033</td><td>0.1354</td><td>0.1022</td></tr>
+              <tr><td>L4GM</td><td class="best">0.1296</td><td class="second">0.8663</td><td class="second">0.1605</td><td class="best">188.32</td><td>–</td><td>–</td><td>–</td></tr>
+              <tr><td>GVFD</td><td>0.1661</td><td>0.8439</td><td>0.1998</td><td>328.14</td><td>–</td><td>–</td><td>–</td></tr>
+              <tr class="ours"><td>MORPHOS (Ours)</td><td class="second">0.1505</td><td class="best">0.8751</td><td class="best">0.1512</td><td class="second">246.22</td><td class="second">0.0817</td><td>0.1312</td><td class="second">0.0336</td></tr>
+              <tr class="group"><td colspan="8">Long</td></tr>
+              <tr><td>Motion324</td><td>0.2347</td><td>0.7905</td><td>0.2407</td><td>889.93</td><td class="best">0.0701</td><td class="best">0.2335</td><td class="best">0.0353</td></tr>
+              <tr><td>ActionMesh</td><td>–</td><td>–</td><td>–</td><td>–</td><td>0.1614</td><td class="second">0.1718</td><td>0.0786</td></tr>
+              <tr><td>Mesh4D</td><td>0.2408</td><td>0.5860</td><td>0.5170</td><td>1327.54</td><td>0.4724</td><td>0.0265</td><td>0.2250</td></tr>
+              <tr><td>TRELLIS</td><td>0.2118</td><td>0.8359</td><td>0.2005</td><td>1527.19</td><td>0.2383</td><td>0.0875</td><td>0.1177</td></tr>
+              <tr><td>L4GM</td><td class="best">0.1355</td><td class="second">0.8578</td><td class="second">0.1535</td><td>487.44</td><td>–</td><td>–</td><td>–</td></tr>
+              <tr><td>GVFD</td><td>0.1796</td><td>0.8049</td><td>0.2319</td><td>827.03</td><td>–</td><td>–</td><td>–</td></tr>
+              <tr class="ours"><td>MORPHOS (Ours)</td><td class="second">0.1494</td><td class="best">0.8670</td><td class="best">0.1526</td><td class="best">330.59</td><td class="second">0.0875</td><td>0.1283</td><td class="second">0.0380</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tbl-note">MORPHOS achieves the best CLIP and DreamSim across both splits and the best long-sequence FVD, demonstrating robust long-horizon appearance consistency.</p>
+      </div>
+
+      <!-- ActionBench -->
+      <div class="table-page" id="t-actionbench">
+        <p class="tbl-cap">Quantitative evaluation on ActionBench (128 animated scenes, 16 frames each).</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Method</th><th>LPIPS↓</th><th>CLIP↑</th><th>DreamSim↓</th><th>FVD↓</th><th>CD↓</th><th>F-score↑</th></tr></thead>
+            <tbody>
+              <tr><td>Motion324</td><td>0.2025</td><td>0.8304</td><td>0.2257</td><td class="second">195.25</td><td>0.1082</td><td>0.2013</td></tr>
+              <tr><td>ActionMesh</td><td>–</td><td>–</td><td>–</td><td>–</td><td class="best">0.0898</td><td class="best">0.2146</td></tr>
+              <tr><td>Mesh4D</td><td class="second">0.1700</td><td>0.8114</td><td>0.2447</td><td>403.20</td><td>0.1776</td><td>0.1235</td></tr>
+              <tr><td>TRELLIS</td><td>0.2005</td><td class="second">0.8367</td><td class="second">0.2199</td><td>547.21</td><td>0.1903</td><td>0.1367</td></tr>
+              <tr><td>L4GM</td><td>0.1908</td><td>0.8071</td><td>0.2522</td><td>211.55</td><td>–</td><td>–</td></tr>
+              <tr><td>GVFD</td><td class="best">0.1687</td><td>0.8301</td><td>0.2335</td><td class="best">188.67</td><td>–</td><td>–</td></tr>
+              <tr class="ours"><td>MORPHOS (Ours)</td><td>0.1904</td><td class="best">0.8551</td><td class="best">0.1857</td><td>203.02</td><td class="second">0.1024</td><td class="second">0.2054</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tbl-note">MORPHOS leads on perceptual appearance (CLIP, DreamSim) while remaining second-best on geometry among methods that also model appearance.</p>
+      </div>
+
+      <!-- Consist4D -->
+      <div class="table-page" id="t-consist4d">
+        <p class="tbl-cap">Appearance evaluation on Consist4D (7 videos, 32 frames each).</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Method</th><th>LPIPS↓</th><th>CLIP↑</th><th>DreamSim↓</th><th>FVD↓</th></tr></thead>
+            <tbody>
+              <tr><td>Motion324</td><td>0.2044</td><td>0.8285</td><td>0.2013</td><td>936.68</td></tr>
+              <tr><td>Mesh4D</td><td>0.1769</td><td>0.7968</td><td>0.2507</td><td>1189.67</td></tr>
+              <tr><td>TRELLIS</td><td>0.2479</td><td>0.8044</td><td>0.2962</td><td>1488.32</td></tr>
+              <tr><td>L4GM</td><td>0.1633</td><td class="second">0.8374</td><td>0.2063</td><td class="second">825.64</td></tr>
+              <tr><td>GVFD</td><td class="best">0.1487</td><td>0.8142</td><td class="best">0.1706</td><td class="best">821.75</td></tr>
+              <tr class="ours"><td>MORPHOS (Ours)</td><td class="second">0.1531</td><td class="best">0.8571</td><td class="second">0.1849</td><td>1013.11</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tbl-note">MORPHOS achieves the best CLIP similarity and competitive LPIPS / DreamSim on real-world video inputs.</p>
+      </div>
+
+      <!-- Ablation -->
+      <div class="table-page" id="t-ablation">
+        <p class="tbl-cap">Ablation studies on ActionBench. Each variant trained for 10k iterations.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Component</th><th>LPIPS↓</th><th>CLIP↑</th><th>DreamSim↓</th><th>FVD↓</th><th>CD↓</th><th>F-score↑</th></tr></thead>
+            <tbody>
+              <tr><td>(a) w/o Causal attn.</td><td>0.1578</td><td>0.8487</td><td>0.1979</td><td class="second">323.20</td><td>0.1305</td><td>0.1986</td></tr>
+              <tr><td>(b) w/o Temporal aug.</td><td>0.1649</td><td>0.8453</td><td>0.2073</td><td>427.89</td><td>0.1280</td><td>0.1873</td></tr>
+              <tr><td>(c) w/o Structural aug.</td><td>0.1600</td><td>0.8457</td><td>0.2011</td><td>349.58</td><td class="second">0.1200</td><td class="best">0.2044</td></tr>
+              <tr><td>(d) w/o Φ<sub>L</sub> training</td><td class="best">0.1569</td><td class="best">0.8503</td><td class="best">0.1956</td><td>370.87</td><td>0.1210</td><td>0.2026</td></tr>
+              <tr><td>(d) w/o Φ<sub>S</sub> training</td><td>0.1670</td><td>0.8400</td><td>0.2104</td><td>506.20</td><td>0.1770</td><td>0.1553</td></tr>
+              <tr class="ours"><td>MORPHOS (Ours)</td><td class="second">0.1577</td><td class="second">0.8462</td><td class="second">0.2006</td><td class="best">336.17</td><td>0.1210</td><td class="second">0.2028</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tbl-note">Every component contributes: causal attention, temporal and structural augmentation, and training both flow transformers (Φ<sub>S</sub>, Φ<sub>L</sub>) are each needed for balanced geometry, appearance, and video consistency.</p>
+      </div>
+
+      <!-- Inference -->
+      <div class="table-page" id="t-inference">
+        <p class="tbl-cap">Inference-time analysis on a single B200 GPU for a 16-frame video.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Setting</th><th>Time (s)</th><th>LPIPS↓</th><th>CLIP↑</th><th>DreamSim↓</th><th>FVD↓</th><th>CD↓</th><th>F-score↑</th></tr></thead>
+            <tbody>
+              <tr><td>w/o Cache</td><td>111.42</td><td>0.1602</td><td>0.8459</td><td class="best">0.2003</td><td>333.19</td><td class="best">0.1194</td><td class="best">0.2057</td></tr>
+              <tr><td>w/ Cache</td><td>54.90</td><td class="best">0.1577</td><td class="best">0.8462</td><td>0.2006</td><td>336.17</td><td>0.1218</td><td>0.2028</td></tr>
+              <tr><td>w/ Cache &amp; Few-step</td><td class="best">28.03</td><td>0.1606</td><td>0.8399</td><td>0.2086</td><td class="best">326.58</td><td>0.1221</td><td>0.2029</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tbl-note">KV caching gives a <span class="hl">2.02×</span> speedup with negligible quality change; few-step sampling reaches a <span class="hl">3.89×</span> speedup overall.</p>
+      </div>
+
+      <div class="callout">
+        <span class="icon">💡</span>
+        <p><strong>MORPHOS</strong> attains state-of-the-art appearance and competitive geometry across benchmarks, while a single unified model generalizes across representations and remains robust on long videos.</p>
+      </div>
+    </section>
+
+    <!-- ANALYSIS -->
+    <section class="block" id="analysis">
+      <span class="label-tag">Analysis</span>
+      <h2 class="heading">Analysis</h2>
+
+      <h3 class="subheading">Attention captures geometric correspondence</h3>
+      <p>For a query voxel (green star) in the target frame, we visualize its attention over the conditioning frames' voxel tokens. MORPHOS establishes <span class="hl">geometric correspondences in 3D</span> and even exploits <span class="hl">symmetry</span> across frames — e.g., a query on one hand attends to both hands — supporting temporally consistent voxel generation.</p>
+      <figure class="fig-bordered">
+        <img src="assets/attention_analysis.png" alt="Attention visualization in T-SLAT space: a query voxel attends to geometrically corresponding and symmetric voxels in conditioning frames.">
+        <figcaption><strong>Attention analysis in T-SLAT space.</strong> Attention concentrates on geometrically corresponding regions across frames.</figcaption>
+      </figure>
+
+      <h3 class="subheading">Minimal error accumulation over long horizons</h3>
+      <div class="two-col narrow-right">
+        <p style="margin:0;">As video length grows, baselines degrade progressively in both appearance (CLIP↑) and geometry (P2S↓). MORPHOS stays <span class="hl">substantially more stable</span> across the full sequence, confirming that causal generation with temporal-structural augmentation mitigates error accumulation.</p>
+        <figure class="fig-bordered" style="margin-top:0;">
+          <img src="assets/error_accum.png" alt="Line charts of CLIP (higher is better) and P2S (lower is better) versus frame index, showing MORPHOS remaining stable while baselines degrade.">
+          <figcaption><strong>Error accumulation analysis.</strong> MORPHOS maintains quality as frame index increases.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- QUALITATIVE -->
+    <section class="block" id="qualitative">
+      <span class="label-tag">Evaluation</span>
+      <h2 class="heading">Qualitative Results</h2>
+
+      <h3 class="subheading">Appearance</h3>
+      <p>MORPHOS produces <span class="hl">visually consistent, high-fidelity appearance</span> with stable textures across the sequence, while deformation-based baselines cannot model topological changes and frame-wise TRELLIS loses temporal consistency.</p>
+      <figure class="fig-bordered">
+        <img src="assets/qual_appearance.png" alt="Qualitative appearance comparison across three scenes versus Motion324, Mesh4D, L4GM, GVFD, and TRELLIS.">
+        <figcaption><strong>Qualitative results on appearance.</strong> MORPHOS maintains stable, high-fidelity textures throughout the sequence.</figcaption>
+      </figure>
+
+      <h3 class="subheading">Geometry</h3>
+      <p>Rendered normal maps show MORPHOS generates <span class="hl">geometrically faithful structures</span> and handles complex topological transitions where fixed-topology methods distort or fail.</p>
+      <figure class="fig-bordered">
+        <img src="assets/qual_geometry.png" alt="Qualitative geometry comparison via rendered normal maps across three scenes versus Motion324, Mesh4D, ActionMesh, and TRELLIS.">
+        <figcaption><strong>Qualitative results on geometry.</strong> MORPHOS preserves accurate shape and temporal consistency through topological changes.</figcaption>
+      </figure>
+    </section>
+
+    <!-- CITATION -->
+    <section class="block" id="citation">
+      <h2 class="heading">Citation</h2>
+      <div class="bibtex">
+        <button class="copy-btn" id="copyBib" title="Copy to clipboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+<pre id="bibText">@article{kwon2026morphos,
+  title   = {MORPHOS: Autoregressive 4D Generation with Temporal Structured Latents},
+  author  = {Kwon, Minkyung and Choi, Jinhyeok and Shin, Youngjin and
+             Kim, Jaeyeong and Lee, JongMin and Kim, Seungryong},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+      </div>
+    </section>
+
+    <footer>© 2026 KAIST AI · MORPHOS</footer>
+
+  </main>
+</div>
+
+<script>
+// ---- Table switcher ----
+document.querySelectorAll('#tableSwitcher button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#tableSwitcher button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.table-page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+  });
+});
+
+// ---- Copy BibTeX ----
+document.getElementById('copyBib').addEventListener('click', function(){
+  var txt = document.getElementById('bibText').innerText;
+  navigator.clipboard.writeText(txt).then(()=>{
+    this.style.background = '#16A34A';
+    setTimeout(()=>{ this.style.background = ''; }, 1200);
+  });
+});
+
+// ---- Active nav on scroll ----
+var navLinks = Array.from(document.querySelectorAll('#nav a'));
+var sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+var obs = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      var id = e.target.id;
+      navLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href') === '#'+id));
+    }
+  });
+}, {rootMargin: '-20% 0px -70% 0px', threshold: 0});
+sections.forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>
