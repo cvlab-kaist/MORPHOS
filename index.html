@@ -286,7 +286,7 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
     <section class="block" id="overview">
       <div class="tldr">
         <strong class="lbl">TL;DR</strong>
-        <p>We present <span class="hl">MORPHOS</span>, an autoregressive 4D generative framework that produces dynamic 3D assets from video across <span class="hl">diverse representations — meshes, 3D Gaussians, and radiance fields</span>. We introduce <span class="hl">Temporal Structured Latents (T-SLAT)</span>, a unified 4D representation that jointly encodes geometry and appearance over time. With causal attention, MORPHOS conditions each frame on its preceding history, and a <span class="hl">temporal-structural augmentation</span> strategy mitigates error accumulation for robust long-horizon generation.</p>
+        <p>We present <span class="hl">MORPHOS</span>, an autoregressive 4D generative framework that produces dynamic 3D assets from video across <span class="hl">diverse representations — meshes, 3D Gaussians, and Radiance Fields</span>. We introduce <span class="hl">Temporal Structured Latents (T-SLAT)</span>, a unified 4D representation that jointly encodes geometry and appearance over time. With causal attention, MORPHOS conditions each frame on its preceding history, and a <span class="hl">temporal-structural augmentation</span> strategy mitigates error accumulation for robust long-horizon generation.</p>
       </div>
     </section>
 
@@ -505,9 +505,9 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
           <table>
             <thead><tr><th>Setting</th><th>Time (s)</th><th>LPIPS↓</th><th>CLIP↑</th><th>DreamSim↓</th><th>FVD↓</th><th>CD↓</th><th>F-score↑</th></tr></thead>
             <tbody>
-              <tr><td>w/o Cache</td><td>111.42</td><td>0.1602</td><td>0.8459</td><td class="best">0.2003</td><td>333.19</td><td class="best">0.1194</td><td class="best">0.2057</td></tr>
-              <tr><td>w/ Cache</td><td>54.90</td><td class="best">0.1577</td><td class="best">0.8462</td><td>0.2006</td><td>336.17</td><td>0.1218</td><td>0.2028</td></tr>
-              <tr><td>w/ Cache &amp; Few-step</td><td class="best">28.03</td><td>0.1606</td><td>0.8399</td><td>0.2086</td><td class="best">326.58</td><td>0.1221</td><td>0.2029</td></tr>
+              <tr><td>w/o Cache</td><td>111.42</td><td>0.1591</td><td>0.8448</td><td>0.1987</td><td>325.39</td><td class="best">0.1189</td><td>0.2084</td></tr>
+              <tr><td>w/ Cache</td><td>54.90</td><td class="best">0.1576</td><td class="best">0.8450</td><td class="best">0.1966</td><td class="best">321.37</td><td>0.1219</td><td class="best">0.2088</td></tr>
+              <tr><td>w/ Cache &amp; Few-step</td><td class="best">28.03</td><td>0.1606</td><td>0.8399</td><td>0.2086</td><td>326.58</td><td>0.1221</td><td>0.2029</td></tr>
             </tbody>
           </table>
         </div>
