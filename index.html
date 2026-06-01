@@ -289,7 +289,7 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
     <section class="block" id="video-results">
       <span class="label-tag">Results</span>
       <h2 class="heading">Video Results</h2>
-      <p class="muted">Flip through samples — each shows the <strong>ground-truth render</strong> alongside MORPHOS's <strong>novel-view generation</strong>.</p>
+      <p class="muted">Flip through samples — each shows the <strong>input video</strong> alongside MORPHOS's <strong>novel-view generation</strong>.</p>
       <!--
         TO ADD REAL SAMPLES: drop files following this convention, then add an entry
         to the `videoSamples` array in the <script> at the bottom of this file:
@@ -639,7 +639,7 @@ function renderVideoSample(item){
       '<h3 class="slide-title">'+item.title+'</h3>'+
       '<div class="slide-grid">'+
         '<div class="slide-input">'+
-          '<p class="media-label">Ground Truth</p>'+
+          '<p class="media-label">Input Video</p>'+
           '<div class="vframe"><video src="'+item.input+'" loop muted playsinline preload="metadata"></video></div>'+
         '</div>'+
         '<div class="slide-views">'+
