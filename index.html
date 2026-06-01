@@ -289,7 +289,7 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
     <section class="block" id="video-results">
       <span class="label-tag">Results</span>
       <h2 class="heading">Video Results</h2>
-      <p class="muted">Flip through samples — each shows the <strong>ground-truth render</strong> alongside MORPHOS's <strong>4-view generation</strong>.</p>
+      <p class="muted">Flip through samples — each shows the <strong>ground-truth render</strong> alongside MORPHOS's <strong>novel-view generation</strong>.</p>
       <!--
         TO ADD REAL SAMPLES: drop files following this convention, then add an entry
         to the `videoSamples` array in the <script> at the bottom of this file:
@@ -621,11 +621,10 @@ function qual(id){ return {
   views:['assets/videos/qual/'+id+'/view1.mp4','assets/videos/qual/'+id+'/view2.mp4',
          'assets/videos/qual/'+id+'/view3.mp4','assets/videos/qual/'+id+'/view4.mp4'] }; }
 var videoSamples = [
-  Object.assign({ title:'Sample 1', desc:'Ground truth vs. MORPHOS 4-view generation.' }, qual('sample1')),
-  Object.assign({ title:'Sample 2', desc:'Ground truth vs. MORPHOS 4-view generation.' }, qual('sample2')),
-  Object.assign({ title:'Sample 3', desc:'Ground truth vs. MORPHOS 4-view generation.' }, qual('sample3')),
-  Object.assign({ title:'Sample 4', desc:'Ground truth vs. MORPHOS 4-view generation.' }, qual('sample4')),
-  Object.assign({ title:'Sample 5', desc:'Ground truth vs. MORPHOS 4-view generation.' }, qual('sample5'))
+  Object.assign({ title:'Sample 1' }, qual('sample1')),
+  Object.assign({ title:'Sample 2' }, qual('sample3')),
+  Object.assign({ title:'Sample 3' }, qual('sample4')),
+  Object.assign({ title:'Sample 4' }, qual('sample5'))
 ];
 
 var ICON_PREV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
@@ -644,7 +643,7 @@ function renderVideoSample(item){
           '<div class="vframe"><video src="'+item.input+'" loop muted playsinline preload="metadata"></video></div>'+
         '</div>'+
         '<div class="slide-views">'+
-          '<p class="media-label">4-View Generation &middot; Ours</p>'+
+          '<p class="media-label">Novel-View Generation &middot; Ours</p>'+
           '<div class="views-2x2">'+views+'</div>'+
         '</div>'+
       '</div>'+
