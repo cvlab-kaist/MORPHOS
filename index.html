@@ -224,13 +224,10 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
       <a href="#overview">Overview</a>
       <a href="#video-results">Video Results</a>
       <a href="#motivation">Motivation</a>
-      <a href="#tslat">Temporal Structured Latents</a>
-      <a href="#autoregressive">Autoregressive Generation</a>
-      <a href="#augmentation">Temporal-Structural Aug.</a>
+      <a href="#method">Method</a>
+      <a href="#qualitative">Qualitative Results</a>
       <a href="#results">Quantitative Results</a>
       <a href="#analysis">Analysis</a>
-      <a href="#qualitative">Qualitative Results</a>
-      <a href="#real">Generalization to Real</a>
       <a href="#citation">Citation</a>
     </nav>
   </aside>
@@ -351,21 +348,19 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
       </div>
     </section>
 
-    <!-- T-SLAT -->
-    <section class="block" id="tslat">
+    <!-- METHOD -->
+    <section class="block" id="method">
       <span class="label-tag">Method</span>
-      <h2 class="heading">Temporal Structured Latents (T-SLAT)</h2>
+      <h2 class="heading">Method</h2>
+
+      <h3 class="subheading">Temporal Structured Latents (T-SLAT)</h3>
       <p>We extend <span class="hl">Structured Latents (SLAT)</span> into the temporal domain to obtain a <span class="hl">unified 4D representation</span> that jointly encodes geometry and appearance along time. An animated mesh sequence is normalized into a shared canonical space via a global union axis-aligned bounding box, then encoded by a sparse VAE into T-SLAT. A single T-SLAT can be decoded into <span class="hl">meshes, 3D Gaussians, and radiance fields</span>.</p>
       <figure class="fig-bordered">
         <img src="assets/tslat_generation.png" alt="T-SLAT generation pipeline: input video and noise pass through a flow transformer with causal and cross attention to produce T-SLAT, decoded into Gaussian, mesh, and radiance-field outputs.">
         <figcaption><strong>T-SLAT generation.</strong> A flow transformer Φ<sub>L</sub> with causal attention generates T-SLAT from the input video, which is decoded into multiple dynamic 3D representations through dedicated decoders.</figcaption>
       </figure>
-    </section>
 
-    <!-- AUTOREGRESSIVE -->
-    <section class="block" id="autoregressive">
-      <span class="label-tag">Method</span>
-      <h2 class="heading">Autoregressive 4D Generation</h2>
+      <h3 class="subheading">Autoregressive 4D Generation</h3>
       <p>MORPHOS factorizes 4D generation as a Markovian process: each latent <span class="mono">z<sup>t</sup></span> is conditioned on the preceding history <span class="mono">z<sup>&lt;t</sup></span> and the current video frame. Two rectified-flow transformers generate the <span class="hl">sparse structure</span> (voxels) and then the <span class="hl">T-SLAT</span> conditioned on it. A <span class="hl">causal attention</span> architecture with a sliding window restricts each query to its history, enabling arbitrarily long generation and <span class="hl">KV caching</span> for efficient inference.</p>
       <div class="two-col narrow-right">
         <figure class="fig-bordered" style="margin-top:0;">
@@ -377,12 +372,8 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
           <figcaption><strong>Causal attention.</strong> Queries at frame <em>t</em> attend only to current and past frames within the window, enabling KV caching.</figcaption>
         </figure>
       </div>
-    </section>
 
-    <!-- AUGMENTATION -->
-    <section class="block" id="augmentation">
-      <span class="label-tag">Method</span>
-      <h2 class="heading">Training with Temporal-Structural Augmentation</h2>
+      <h3 class="subheading">Training with Temporal-Structural Augmentation</h3>
       <p>Autoregressive models are trained on ground-truth history but must generalize to imperfect, self-generated history at inference. To bridge this gap, MORPHOS trains both flow transformers with a <span class="hl">temporal-structural augmentation</span> strategy.</p>
       <div class="cards">
         <div class="card">
@@ -396,6 +387,28 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
           <p><strong>Randomly drops voxels</strong> in the sparse structure conditioning T-SLAT generation, making the model robust to structural inaccuracies propagated from the structure-generation stage.</p>
         </div>
       </div>
+    </section>
+
+    <!-- QUALITATIVE -->
+    <section class="block" id="qualitative">
+      <span class="label-tag">Evaluation</span>
+      <h2 class="heading">Qualitative Results</h2>
+
+      <h3 class="subheading">Appearance</h3>
+      <p>MORPHOS produces <span class="hl">visually consistent, high-fidelity appearance</span> with stable textures across the sequence, while deformation-based baselines cannot model topological changes and frame-wise TRELLIS loses temporal consistency.</p>
+      <div class="img-carousel" id="carousel-appearance"></div>
+      <p class="img-cap"><strong>Qualitative results on appearance.</strong> MORPHOS maintains stable, high-fidelity textures throughout the sequence.</p>
+
+      <h3 class="subheading">Geometry</h3>
+      <p>Rendered normal maps show MORPHOS generates <span class="hl">geometrically faithful structures</span> and handles complex topological transitions where fixed-topology methods distort or fail.</p>
+      <div class="img-carousel" id="carousel-geometry"></div>
+      <p class="img-cap"><strong>Qualitative results on geometry.</strong> MORPHOS preserves accurate shape and temporal consistency through topological changes.</p>
+
+      <h3 class="subheading">Generalization to Real Domain</h3>
+      <figure class="fig-bordered">
+        <img src="assets/qual_real.png" alt="Generalization to real-world DAVIS videos: input videos and MORPHOS novel-view 4D renderings across four scenes.">
+        <figcaption>Given real-world videos from DAVIS, <strong>MORPHOS</strong> generates temporally consistent 4D results with stable geometry and coherent appearance. Our method further enables novel-view video generation.</figcaption>
+      </figure>
     </section>
 
     <!-- RESULTS -->
@@ -541,32 +554,6 @@ footer{text-align:center;padding:40px 0 0;color:var(--text-secondary);font-size:
           <figcaption><strong>Error accumulation analysis.</strong> MORPHOS maintains quality as frame index increases.</figcaption>
         </figure>
       </div>
-    </section>
-
-    <!-- QUALITATIVE -->
-    <section class="block" id="qualitative">
-      <span class="label-tag">Evaluation</span>
-      <h2 class="heading">Qualitative Results</h2>
-
-      <h3 class="subheading">Appearance</h3>
-      <p>MORPHOS produces <span class="hl">visually consistent, high-fidelity appearance</span> with stable textures across the sequence, while deformation-based baselines cannot model topological changes and frame-wise TRELLIS loses temporal consistency.</p>
-      <div class="img-carousel" id="carousel-appearance"></div>
-      <p class="img-cap"><strong>Qualitative results on appearance.</strong> MORPHOS maintains stable, high-fidelity textures throughout the sequence.</p>
-
-      <h3 class="subheading">Geometry</h3>
-      <p>Rendered normal maps show MORPHOS generates <span class="hl">geometrically faithful structures</span> and handles complex topological transitions where fixed-topology methods distort or fail.</p>
-      <div class="img-carousel" id="carousel-geometry"></div>
-      <p class="img-cap"><strong>Qualitative results on geometry.</strong> MORPHOS preserves accurate shape and temporal consistency through topological changes.</p>
-    </section>
-
-    <!-- GENERALIZATION TO REAL -->
-    <section class="block" id="real">
-      <span class="label-tag">Generalization</span>
-      <h2 class="heading">Generalization to Real Domain</h2>
-      <figure class="fig-bordered">
-        <img src="assets/qual_real.png" alt="Generalization to real-world DAVIS videos: input videos and MORPHOS novel-view 4D renderings across four scenes.">
-        <figcaption>Given real-world videos from DAVIS, <strong>MORPHOS</strong> generates temporally consistent 4D results with stable geometry and coherent appearance. Our method further enables novel-view video generation.</figcaption>
-      </figure>
     </section>
 
     <!-- CITATION -->
