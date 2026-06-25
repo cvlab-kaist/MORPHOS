@@ -1,0 +1,37 @@
+# Extra packages required to run the evaluation metric scripts.
+#   trellis.evaluation.metric_appearance  (LPIPS / CLIP / DreamSim / FVD)
+#   trellis.evaluation.metric_geometry    (Chamfer distance / F-score / P2S)
+#
+# Install with: pip install -r trellis/evaluation/requirements.txt
+#
+# numpy / torch / Pillow / trimesh are already required by the main pipeline
+# and are not re-listed here.
+
+# --- appearance metrics (metric_appearance.py) ---
+lpips
+open_clip_torch
+dreamsim
+fsspec
+scipy           # frechet distance via scipy.linalg.sqrtm
+
+# --- geometry metrics (metric_geometry.py) ---
+pandas          # per-scene CSV write/resume
+tqdm
+scipy           # KDTree (in benchmark/chamfer.py)
+# pytorch3d is required by benchmark/{icp,sample_mesh}.py. It is not on
+# PyPI in a one-line installable form on most setups; to install pytorch3d,
+# git clone https://github.com/facebookresearch/pytorch3d.git
+# cd pytorch3d && pip install -e .
+
+# --- FVD: vendored at trellis/evaluation/fvd/styleganv/fvd.py ---
+# Copied verbatim from Motion324/evaluation/fvd/styleganv/fvd.py.
+# The I3D weights are downloaded automatically on first call via wget into
+# trellis/evaluation/fvd/styleganv/i3d_torchscript.pt — make sure `wget`
+# is on PATH and the runtime can reach Dropbox.
+
+# --- benchmark reference (for metric_geometry) ---
+# Vendored at trellis/evaluation/benchmark/ (chamfer.py / icp.py /
+# sample_mesh.py / sample_point_cloud.py). Original Meta copyright
+# preserved on each file. No external clone or PYTHONPATH setup required —
+# `from trellis.evaluation.benchmark import compute_chamfer_score` works
+# after installing the python deps above.

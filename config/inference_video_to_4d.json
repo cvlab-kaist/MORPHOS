@@ -1,0 +1,34 @@
+{
+    "ckpts": {
+        "ss_config":    "./config/temporal_ss_flow_dit_w3_diffforcing.json",
+        "ss_weights":   "<PATH_TO_SS_WEIGHTS_PT>",
+        "slat_config":  "./config/temporal_slat_flow_dit_w3_diffforcing.json",
+        "slat_weights": "<PATH_TO_SLAT_WEIGHTS_PT>"
+    },
+    "sampling": {
+        "modes":      ["ar_kv"],
+        "steps_ss":   25,
+        "steps_slat": 25,
+        "cfg_ss":     5.0,
+        "cfg_slat":   5.0,
+        "rescale_t":  3.0,
+        "cfg_interval": [0.5, 1.0],
+        "ss_threshold": 0.0,
+        "seed": 42
+    },
+    "render": {
+        "resolution": 256,
+        "bg_color":   "white"
+    },
+    "save": {
+        "save_mesh": true,
+        "save_slat": true,
+        "textured":  false,
+        "mesh_simplify":     0.95,
+        "mesh_texture_size": 1024
+    },
+    "caps": {
+        "num_samples": null,
+        "num_frames":  null
+    }
+}

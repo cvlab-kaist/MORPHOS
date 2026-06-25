@@ -1,0 +1,105 @@
+{
+    "models": {
+        "denoiser": {
+            "name": "DiffusionForcingTemporalSlatFlowModel",
+            "args": {
+                "resolution": 64,
+                "in_channels": 8,
+                "out_channels": 8,
+                "model_channels": 1024,
+                "cond_channels": 1024,
+                "num_blocks": 24,
+                "num_heads": 16,
+                "mlp_ratio": 4,
+                "patch_size": 2,
+                "num_io_res_blocks": 2,
+                "io_block_channels": [128],
+                "pe_mode": "ape",
+                "qk_rms_norm": true,
+                "use_fp16": true,
+                "use_checkpoint": false,
+                "window_size": 3,
+                "trainable_scope": "self_attn",
+                "pretrained_base": "microsoft/TRELLIS-image-large/ckpts/slat_flow_img_dit_L_64l8p2_fp16"
+            }
+        }
+    },
+    "dataset": {
+        "name": "TemporalSLat",
+        "args": {
+            "window_size": 3,
+            "val_num_scenes": 20,
+            "val_num_frames": 12,
+            "image_size": 518,
+            "num_cond_views": 6,
+            "front_view_prob": 0.4,
+            "pretrained_slat_dec": "microsoft/TRELLIS-image-large/ckpts/slat_dec_gs_swin8_B_64l8gs32_fp16",
+            "normalization": {
+                "mean": [
+                    -2.2392261552952513,
+                    0.7410145409701431,
+                    0.5079064556582509,
+                    -0.05298659832508365,
+                    -0.025759045060578523,
+                    0.8829246196309438,
+                    -0.7059389169604169,
+                    0.9353478047296675
+                ],
+                "std": [
+                    2.5146836083929074,
+                    2.396254417443913,
+                    2.430939371044743,
+                    2.18786890103016,
+                    2.9446809932599853,
+                    2.3331955459252756,
+                    2.7919380050354676,
+                    2.6444312498997413
+                ]
+            }
+        }
+    },
+    "trainer": {
+        "name": "DiffusionForcingSLatImageConditionedTrainer",
+        "args": {
+            "max_steps": 200000,
+            "batch_size_per_gpu": 16,
+            "batch_split": 16,
+            "window_size": 3,
+            "independent_t": true,
+            "coord_drop_prob": 0.05,
+            "coord_drop_num": 2,
+            "cfg_strength": 3.0,
+            "snapshot_steps": 50,
+            "rescale_t": 3.0,
+            "cfg_interval": [0.5, 1.0],
+            "snapshot_modes": ["ar_kvcache"],
+            "optimizer": {
+                "name": "AdamW",
+                "args": {
+                    "lr": 1e-4,
+                    "weight_decay": 0.00
+                }
+            },
+            "ema_rate": [0.9999],
+            "fp16_mode": "inflat_all",
+            "fp16_scale_growth": 0.001,
+            "grad_clip": {
+                "name": "AdaptiveGradClipper",
+                "args": {
+                    "max_norm": 1.0,
+                    "clip_percentile": 95
+                }
+            },
+            "i_log": 10,
+            "i_print": 100,
+            "i_sample": 5000,
+            "i_save": 5000,
+            "p_uncond": 0.1,
+            "t_schedule": {
+                "name": "uniform"
+            },
+            "sigma_min": 1e-5,
+            "image_cond_model": "dinov2_vitl14_reg"
+        }
+    }
+}

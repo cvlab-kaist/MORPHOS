@@ -1,0 +1,13 @@
+{
+    "scenes_glob": "/PATH/TO/SCENES/{scene}/",
+    "scenes": null,
+
+    "az_order": ["0", "90", "180", "270"],
+    "search_azimuths_deg": [0, 90, 180, 270],
+
+    "gt_4view":    "/PATH/TO/{scene}/{az}/frame_{frame:04d}.png",
+    "gt_pcd":      "/PATH/TO/{scene}/frame_{frame:04d}.npy",
+    "gt_face_glb": "/PATH/TO/benchmark4d/{scene}.glb",
+
+    "_comment": "In the 'gt_pcd', you can use a single global .npy file."
+}
